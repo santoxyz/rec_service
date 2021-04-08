@@ -1,6 +1,6 @@
 # rec_service
 
-A new flutter plugin project.
+flutter plugin to record audio (foreground service)
 
 ## Getting Started
 
