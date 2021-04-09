@@ -49,7 +49,12 @@ public class RecService extends Service {
             SetMuted(b.getBoolean("mute"));
             return START_NOT_STICKY;
         }
-
+        if (intent.hasExtra("pause")){
+            Bundle b=new Bundle();
+            b=intent.getExtras();
+            SetPaused(b.getBoolean("pause"));
+            return START_NOT_STICKY;
+        }
         String input = intent.getStringExtra("inputExtra");
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, RecServicePlugin.class);
@@ -115,12 +120,16 @@ public class RecService extends Service {
     FileOutputStream outputStream = null;
 
     private boolean muted = false;
+    private boolean paused = false;
 
 
     public void SetMuted(boolean m){
         muted = m;
     }
 
+    public void SetPaused(boolean p){
+        paused = p;
+    }
     public void StartRecorder() {
         Log.i(TAG, "Starting the audio stream");
         currentlySendingAudio = true;
@@ -177,8 +186,9 @@ public class RecService extends Service {
                             if(muted){
                                 Arrays.fill(buffer, (byte) 0);
                             }
-
-                            outputStream.write(buffer, 0, readSize);
+                            if(!paused) {
+                                outputStream.write(buffer, 0, readSize);
+                            }
 
                         } catch (IOException e) {
                             e.printStackTrace();

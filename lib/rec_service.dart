@@ -22,8 +22,8 @@ class RecService {
     return version;
   }
 
-  static Future<String> get pause async {
-    final String version = await _channel.invokeMethod('PAUSE');
+  static Future<String> pause(bool p) async {
+    final String version = await _channel.invokeMethod('PAUSE',p);
     return version;
   }
 

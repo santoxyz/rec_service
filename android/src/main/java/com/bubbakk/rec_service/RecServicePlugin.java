@@ -49,7 +49,10 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
       stopRecorder();
       result.success("Android " + android.os.Build.VERSION.RELEASE + " -- STOP");
     } else if (call.method.equals("PAUSE")) {
-      result.success("Android " + android.os.Build.VERSION.RELEASE + " -- PAUSE");
+      boolean p = (boolean)call.arguments;
+      String pstr = p ? "ON" : "OFF";
+      setPaused(p);
+      result.success("Android " + android.os.Build.VERSION.RELEASE + " -- PAUSE " + pstr);
     } else if (call.method.equals("MUTE")) {
       boolean m = (boolean)call.arguments;
       String mstr = m ? "ON" : "OFF";
@@ -69,6 +72,12 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
   public void setMuted(boolean m) {
     Intent serviceIntent = new Intent(context, RecService.class);
     serviceIntent.putExtra("mute",m);
+    ContextCompat.startForegroundService(activity, serviceIntent);
+  }
+
+  public void setPaused(boolean p) {
+    Intent serviceIntent = new Intent(context, RecService.class);
+    serviceIntent.putExtra("pause",p);
     ContextCompat.startForegroundService(activity, serviceIntent);
   }
 
