@@ -66,7 +66,7 @@ class _MyAppState extends State<MyApp> {
               new RaisedButton(
                 child: new Text("REC"),
                 color:  Colors.blueAccent[600],
-                onPressed: () async {print("REC pressed");updateState(await RecService.start);},
+                onPressed: () async {print("REC pressed");updateState(await RecService.start("flutter_record",1));},
               ),
 
               new RaisedButton(

@@ -55,6 +55,20 @@ public class RecService extends Service {
             SetPaused(b.getBoolean("pause"));
             return START_NOT_STICKY;
         }
+        if (intent.hasExtra("prefix")){
+            Bundle b=new Bundle();
+            b=intent.getExtras();
+            SetPrefix(b.getString("prefix"));
+            //return START_NOT_STICKY;
+        }
+        if (intent.hasExtra("prefix")){
+            Bundle b=new Bundle();
+            b=intent.getExtras();
+            SetChunkSize(b.getInt("chunkSize"));
+            //return START_NOT_STICKY;
+        }
+
+
         String input = intent.getStringExtra("inputExtra");
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, RecServicePlugin.class);
@@ -121,7 +135,14 @@ public class RecService extends Service {
 
     private boolean muted = false;
     private boolean paused = false;
+    private String prefix = null;
+    private int chunkSize = 0;
 
+    private int totalWritten = 0;
+    private int chunkNum = 1;
+
+    private String filename;
+    private String filepath;
 
     public void SetMuted(boolean m){
         muted = m;
@@ -130,6 +151,14 @@ public class RecService extends Service {
     public void SetPaused(boolean p){
         paused = p;
     }
+
+    public void SetPrefix(String p){
+        prefix = p;
+    }
+    public void SetChunkSize(int s){
+        chunkSize = s;
+    }
+
     public void StartRecorder() {
         Log.i(TAG, "Starting the audio stream");
         currentlySendingAudio = true;
@@ -144,8 +173,14 @@ public class RecService extends Service {
 
     private void startStreaming() {
         Log.i(TAG, "Starting the background thread (in this foreground service) to read the audio data");
-        String filepath = Environment.getExternalStorageDirectory().getPath();
-        final String filename = filepath+"/record.wav";
+
+        filepath = Environment.getExternalStorageDirectory().getPath();
+        filename = prefix != null && !prefix.isEmpty()
+            ? chunkSize > 0
+                ? filepath + "/" + prefix + "-" + chunkNum + ".wav"
+                : filepath + "/" + prefix + ".wav"
+            : filepath + "/record.wav";
+
         try {
             outputStream = new FileOutputStream(filename);
 
@@ -180,6 +215,35 @@ public class RecService extends Service {
                     while (currentlySendingAudio == true) {
                         // read the data into the buffer
                         int readSize = recorder.read(buffer, 0, buffer.length);
+                        if(totalWritten + readSize > chunkSize*1024*1024){
+                            ///chiudere il file corrente ed aprire un nuovo outputStream!
+                            Log.d(TAG, "Closing Chunk " + chunkNum);
+                            try {
+                                outputStream.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            updateWavHeader(new File(filename));
+
+                            //aprire nuovo stream:
+                            totalWritten = 0;
+                            chunkNum++;
+
+                            filename = prefix != null && !prefix.isEmpty()
+                                    ? chunkSize > 0
+                                    ? filepath + "/" + prefix + "-" + chunkNum + ".wav"
+                                    : filepath + "/" + prefix + ".wav"
+                                    : filepath + "/record.wav";
+
+                            try {
+                                outputStream = new FileOutputStream(filename);
+
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                            writeWavHeader(outputStream, AudioFormat.CHANNEL_IN_MONO, rate, AudioFormat.ENCODING_PCM_16BIT);
+
+                        }
 
                         try {
                             //ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).asShortBuffer().put(buffer);
@@ -188,6 +252,7 @@ public class RecService extends Service {
                             }
                             if(!paused) {
                                 outputStream.write(buffer, 0, readSize);
+                                totalWritten += readSize;
                             }
 
                         } catch (IOException e) {

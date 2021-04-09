@@ -43,8 +43,11 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
     if (call.method.equals("getPlatformVersion")) {
       result.success("Android " + android.os.Build.VERSION.RELEASE);
     } else if (call.method.equals("START")) {
-      startRecorder();
-      result.success("Android " + android.os.Build.VERSION.RELEASE + " -- START");
+      //"prefix":prefix, "chunkSize":chunkSize
+      String prefix = (String)call.argument("prefix");
+      int chunkSize = (int)call.argument("chunkSize");
+      startRecorder(prefix,chunkSize);
+      result.success("Android " + android.os.Build.VERSION.RELEASE + " -- START " + "prefix:" + prefix + " chunkSize:" + chunkSize);
     } else if (call.method.equals("STOP")) {
       stopRecorder();
       result.success("Android " + android.os.Build.VERSION.RELEASE + " -- STOP");
@@ -81,11 +84,18 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
     ContextCompat.startForegroundService(activity, serviceIntent);
   }
 
-  public void startRecorder() {
+  public void startRecorder(String prefix, int chunkSize) {
     Log.i(TAG, "Starting the foreground-thread");
 
     Intent serviceIntent = new Intent(context, RecService.class);
     serviceIntent.putExtra("inputExtra", "Foreground Service Example in Android");
+    if(prefix != null && !prefix.isEmpty()){
+      serviceIntent.putExtra("prefix", prefix);
+    }
+    if(chunkSize >0){
+      serviceIntent.putExtra("chunkSize", chunkSize);
+    }
+
     ContextCompat.startForegroundService(activity, serviceIntent);
 
   }
