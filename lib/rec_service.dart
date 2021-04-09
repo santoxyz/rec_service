@@ -27,4 +27,9 @@ class RecService {
     return version;
   }
 
+  static Future<String> mute(bool m) async {
+    final String version = await _channel.invokeMethod('MUTE',m);
+    return version;
+  }
+
 }

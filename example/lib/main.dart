@@ -15,6 +15,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
+  bool _muted = false;
 
   @override
   void initState() {
@@ -79,6 +80,11 @@ class _MyAppState extends State<MyApp> {
                 onPressed:  () async {print("STOP pressed");updateState(await RecService.stop);},
               ),
 
+              new RaisedButton(
+                child: new Text("MUTE"),
+                color:  Colors.blueAccent[600],
+                onPressed:  () async {print("MUTE pressed");updateState(await RecService.mute(_muted = !_muted));},
+              ),
             ],
           ),
         ),

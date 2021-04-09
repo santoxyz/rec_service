@@ -12,6 +12,7 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 
@@ -28,6 +29,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 import javax.xml.transform.sax.TemplatesHandler;
 
@@ -41,6 +43,13 @@ public class RecService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent.hasExtra("mute")){
+            Bundle b=new Bundle();
+            b=intent.getExtras();
+            SetMuted(b.getBoolean("mute"));
+            return START_NOT_STICKY;
+        }
+
         String input = intent.getStringExtra("inputExtra");
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, RecServicePlugin.class);
@@ -105,12 +114,19 @@ public class RecService extends Service {
 
     FileOutputStream outputStream = null;
 
+    private boolean muted = false;
+
+
+    public void SetMuted(boolean m){
+        muted = m;
+    }
 
     public void StartRecorder() {
         Log.i(TAG, "Starting the audio stream");
         currentlySendingAudio = true;
         startStreaming();
     }
+
     public void StopRecorder() {
         Log.i(TAG, "Stopping the audio stream");
         currentlySendingAudio = false;
@@ -158,7 +174,12 @@ public class RecService extends Service {
 
                         try {
                             //ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).asShortBuffer().put(buffer);
+                            if(muted){
+                                Arrays.fill(buffer, (byte) 0);
+                            }
+
                             outputStream.write(buffer, 0, readSize);
+
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

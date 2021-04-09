@@ -50,6 +50,11 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
       result.success("Android " + android.os.Build.VERSION.RELEASE + " -- STOP");
     } else if (call.method.equals("PAUSE")) {
       result.success("Android " + android.os.Build.VERSION.RELEASE + " -- PAUSE");
+    } else if (call.method.equals("MUTE")) {
+      boolean m = (boolean)call.arguments;
+      String mstr = m ? "ON" : "OFF";
+      setMuted(m);
+      result.success("Android " + android.os.Build.VERSION.RELEASE + " -- MUTE " + mstr);
     }
     else {
       result.notImplemented();
@@ -59,6 +64,12 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     channel.setMethodCallHandler(null);
+  }
+
+  public void setMuted(boolean m) {
+    Intent serviceIntent = new Intent(context, RecService.class);
+    serviceIntent.putExtra("mute",m);
+    ContextCompat.startForegroundService(activity, serviceIntent);
   }
 
   public void startRecorder() {
@@ -75,7 +86,6 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
 
     Intent serviceIntent = new Intent(context, RecService.class);
     context.stopService(serviceIntent);
-
 
   }
 
