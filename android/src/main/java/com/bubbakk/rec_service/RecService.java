@@ -61,13 +61,18 @@ public class RecService extends Service {
             SetPrefix(b.getString("prefix"));
             //return START_NOT_STICKY;
         }
-        if (intent.hasExtra("prefix")){
+        if (intent.hasExtra("chunkSize")){
             Bundle b=new Bundle();
             b=intent.getExtras();
             SetChunkSize(b.getInt("chunkSize"));
             //return START_NOT_STICKY;
         }
-
+        if (intent.hasExtra("alsoWholeRec")){
+            Bundle b=new Bundle();
+            b=intent.getExtras();
+            SetAlsoWholeRec(b.getBoolean("alsoWholeRec"));
+            //return START_NOT_STICKY;
+        }
 
         String input = intent.getStringExtra("inputExtra");
         createNotificationChannel();
@@ -132,16 +137,19 @@ public class RecService extends Service {
     private boolean currentlySendingAudio = false;
 
     FileOutputStream outputStream = null;
+    FileOutputStream outputStreamWhole = null;
 
     private boolean muted = false;
     private boolean paused = false;
     private String prefix = null;
     private int chunkSize = 0;
+    private  boolean alsoWholeRec = false;
 
     private int totalWritten = 0;
     private int chunkNum = 1;
 
     private String filename;
+    private String filenameWhole;
     private String filepath;
 
     public void SetMuted(boolean m){
@@ -159,6 +167,7 @@ public class RecService extends Service {
         chunkSize = s;
     }
 
+    public void  SetAlsoWholeRec(boolean b) { alsoWholeRec = b; }
     public void StartRecorder() {
         Log.i(TAG, "Starting the audio stream");
         currentlySendingAudio = true;
@@ -180,10 +189,15 @@ public class RecService extends Service {
                 ? filepath + "/" + prefix + "-" + chunkNum + ".wav"
                 : filepath + "/" + prefix + ".wav"
             : filepath + "/record.wav";
+        if(alsoWholeRec)
+            filenameWhole = prefix != null && !prefix.isEmpty()
+                ? filepath + "/" + prefix + "-whole.wav"
+                : filepath + "/record-whole.wav";
 
         try {
             outputStream = new FileOutputStream(filename);
-
+            if(alsoWholeRec)
+                outputStreamWhole = new FileOutputStream(filenameWhole);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -194,7 +208,8 @@ public class RecService extends Service {
                 try {
                     Log.d(TAG, "Creating the buffer of size " + BUFFER_SIZE);
                     //byte[] buffer = new byte[BUFFER_SIZE];
-                    int rate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_SYSTEM);
+                    //int rate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_SYSTEM);
+                    int rate = 16000;
                     int bufferSize = 2 * AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
                     //short[] buffer = new short[bufferSize]; //AudioFormat.ENCODING_PCM_16BIT
                     byte[] buffer = new byte[bufferSize]; //AudioFormat.ENCODING_PCM_8BIT
@@ -207,7 +222,10 @@ public class RecService extends Service {
 
                     // Write out the wav file header
                     writeWavHeader(outputStream, AudioFormat.CHANNEL_IN_MONO, rate, AudioFormat.ENCODING_PCM_16BIT);
-                    byte[] bytes = new byte[buffer.length * 2];
+                    if(alsoWholeRec)
+                        writeWavHeader(outputStreamWhole, AudioFormat.CHANNEL_IN_MONO, rate, AudioFormat.ENCODING_PCM_16BIT);
+
+                    //byte[] bytes = new byte[buffer.length * 2];
 
                     Log.d(TAG, "AudioRecord recording...");
                     recorder.startRecording();
@@ -252,6 +270,8 @@ public class RecService extends Service {
                             }
                             if(!paused) {
                                 outputStream.write(buffer, 0, readSize);
+                                if(alsoWholeRec)
+                                    outputStreamWhole.write(buffer, 0, readSize);
                                 totalWritten += readSize;
                             }
 
@@ -259,6 +279,7 @@ public class RecService extends Service {
                             e.printStackTrace();
                         }
 
+                        /*
                         double maxAmplitude = 0;
                         for (int i = 0; i < readSize; i++) {
                             if (Math.abs(buffer[i]) > maxAmplitude) {
@@ -272,15 +293,22 @@ public class RecService extends Service {
                         }
 
                         Log.d(TAG, "Max amplitude: " + maxAmplitude + " ; DB: " + db);
+
+                         */
                     }
 
                     Log.d(TAG, "AudioRecord finished recording");
                     try {
                         outputStream.close();
+                        if(alsoWholeRec)
+                            outputStreamWhole.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     updateWavHeader(new File(filename));
+                    if(alsoWholeRec)
+                        updateWavHeader(new File(filenameWhole));
+
                 } catch (Exception e) {
                     Log.e(TAG, "Exception: " + e);
                 }

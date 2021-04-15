@@ -46,7 +46,8 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
       //"prefix":prefix, "chunkSize":chunkSize
       String prefix = (String)call.argument("prefix");
       int chunkSize = (int)call.argument("chunkSize");
-      startRecorder(prefix,chunkSize);
+      boolean alsoWholeRec = (boolean)call.argument("alsoWholeRec");
+      startRecorder(prefix,chunkSize,alsoWholeRec);
       result.success("Android " + android.os.Build.VERSION.RELEASE + " -- START " + "prefix:" + prefix + " chunkSize:" + chunkSize);
     } else if (call.method.equals("STOP")) {
       stopRecorder();
@@ -84,7 +85,7 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
     ContextCompat.startForegroundService(activity, serviceIntent);
   }
 
-  public void startRecorder(String prefix, int chunkSize) {
+  public void startRecorder(String prefix, int chunkSize, boolean alsoWholeRec) {
     Log.i(TAG, "Starting the foreground-thread");
 
     Intent serviceIntent = new Intent(context, RecService.class);
@@ -95,6 +96,7 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
     if(chunkSize >0){
       serviceIntent.putExtra("chunkSize", chunkSize);
     }
+    serviceIntent.putExtra("alsoWholeRec", alsoWholeRec);
 
     ContextCompat.startForegroundService(activity, serviceIntent);
 
