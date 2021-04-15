@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:rec_service/rec_service.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -66,7 +67,11 @@ class _MyAppState extends State<MyApp> {
               new RaisedButton(
                 child: new Text("REC"),
                 color:  Colors.blueAccent[600],
-                onPressed: () async {print("REC pressed");updateState(await RecService.start(prefix:"flutter_record",chunkSize:1,alsoWholeRec: true));},
+                onPressed: () async {
+                    print("REC pressed");
+                    var path = await getExternalStorageDirectory();
+                    updateState(await RecService.start(path: path.path, prefix:"flutter_record",chunkSize:1,alsoWholeRec: true));
+                  },
               ),
 
               new RaisedButton(

@@ -55,6 +55,12 @@ public class RecService extends Service {
             SetPaused(b.getBoolean("pause"));
             return START_NOT_STICKY;
         }
+        if (intent.hasExtra("path")){
+            Bundle b=new Bundle();
+            b=intent.getExtras();
+            SetPath(b.getString("path"));
+            //return START_NOT_STICKY;
+        }
         if (intent.hasExtra("prefix")){
             Bundle b=new Bundle();
             b=intent.getExtras();
@@ -160,6 +166,10 @@ public class RecService extends Service {
         paused = p;
     }
 
+    public void SetPath(String p){
+        filepath = p;
+    }
+
     public void SetPrefix(String p){
         prefix = p;
     }
@@ -183,7 +193,9 @@ public class RecService extends Service {
     private void startStreaming() {
         Log.i(TAG, "Starting the background thread (in this foreground service) to read the audio data");
 
-        filepath = Environment.getExternalStorageDirectory().getPath();
+        if(filepath == null || filepath.isEmpty())
+            filepath = Environment.getExternalStorageDirectory().getPath();
+
         filename = prefix != null && !prefix.isEmpty()
             ? chunkSize > 0
                 ? filepath + "/" + prefix + "-" + chunkNum + ".wav"
