@@ -55,6 +55,12 @@ public class RecService extends Service {
             SetPaused(b.getBoolean("pause"));
             return START_NOT_STICKY;
         }
+        if (intent.hasExtra("wholeRecPath")){
+            Bundle b=new Bundle();
+            b=intent.getExtras();
+            setWholeRecPath(b.getString("wholeRecPath"));
+            //return START_NOT_STICKY;
+        }
         if (intent.hasExtra("chunksPath")){
             Bundle b=new Bundle();
             b=intent.getExtras();
@@ -157,6 +163,7 @@ public class RecService extends Service {
     private String filename;
     private String filenameWhole;
     private String chunksFilePath;
+    private String wholeRecPath;
 
     public void SetMuted(boolean m){
         muted = m;
@@ -170,6 +177,10 @@ public class RecService extends Service {
         chunksFilePath = p;
     }
 
+    public void setWholeRecPath(String p){
+        wholeRecPath = p;
+    }
+
     public void SetPrefix(String p){
         prefix = p;
     }
@@ -177,7 +188,10 @@ public class RecService extends Service {
         chunkSize = s;
     }
 
-    public void  SetAlsoWholeRec(boolean b) { alsoWholeRec = b; }
+    public void  SetAlsoWholeRec(boolean b) {
+        alsoWholeRec = b;
+    }
+
     public void StartRecorder() {
         Log.i(TAG, "Starting the audio stream");
         currentlySendingAudio = true;
@@ -195,16 +209,19 @@ public class RecService extends Service {
 
         if(chunksFilePath == null || chunksFilePath.isEmpty())
             chunksFilePath = Environment.getExternalStorageDirectory().getPath();
+        if(wholeRecPath == null || wholeRecPath.isEmpty())
+            wholeRecPath = Environment.getExternalStorageDirectory().getPath();
 
         filename = prefix != null && !prefix.isEmpty()
             ? chunkSize > 0
                 ? chunksFilePath + "/" + prefix + "-" + String.format("%04d", chunkNum) + ".wav"          // four digits decimal max = 9999 = 10.000 chunks = ~6 days, one slice per minute
                 : chunksFilePath + "/" + prefix + ".wav"
             : chunksFilePath + "/record.wav";
+
         if(alsoWholeRec)
             filenameWhole = prefix != null && !prefix.isEmpty()
-                ? chunksFilePath + "/" + prefix + "-whole.wav"
-                : chunksFilePath + "/record-whole.wav";
+                ? wholeRecPath + "/" + prefix + "-whole.wav"
+                : wholeRecPath + "/record-whole.wav";
 
         try {
             outputStream = new FileOutputStream(filename);
@@ -261,7 +278,7 @@ public class RecService extends Service {
 
                             filename = prefix != null && !prefix.isEmpty()
                                     ? chunkSize > 0
-                                    ? chunksFilePath + "/" + prefix + "-" + chunkNum + ".wav"
+                                    ? chunksFilePath + "/" + prefix + "-" + String.format("%04d", chunkNum) + ".wav"
                                     : chunksFilePath + "/" + prefix + ".wav"
                                     : chunksFilePath + "/record.wav";
 

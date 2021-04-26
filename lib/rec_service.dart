@@ -12,8 +12,14 @@ class RecService {
     return version;
   }
 
-  static Future<String> start({String chunksPath, String prefix, int chunkSize, bool alsoWholeRec}) async {
-    final String version = await _channel.invokeMethod('START',{"chunksPath":chunksPath,"prefix":prefix, "chunkSize":chunkSize, "alsoWholeRec":alsoWholeRec});
+  static Future<String> start({String chunksPath, String wholeRecPath, String prefix, int chunkSize, bool alsoWholeRec}) async {
+    final String version = await _channel.invokeMethod('START', {
+      "chunksPath":chunksPath,
+      "wholeRecPath": wholeRecPath,
+      "prefix":prefix,
+      "chunkSize":chunkSize,
+      "alsoWholeRec":alsoWholeRec
+    });
     return version;
   }
 
