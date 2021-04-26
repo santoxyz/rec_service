@@ -44,11 +44,11 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
       result.success("Android " + android.os.Build.VERSION.RELEASE);
     } else if (call.method.equals("START")) {
       //"prefix":prefix, "chunkSize":chunkSize
-      String path = (String)call.argument("path");
+      String chunksPath = (String)call.argument("chunksPath");
       String prefix = (String)call.argument("prefix");
       int chunkSize = (int)call.argument("chunkSize");
       boolean alsoWholeRec = (boolean)call.argument("alsoWholeRec");
-      startRecorder(path,prefix,chunkSize,alsoWholeRec);
+      startRecorder(chunksPath,prefix,chunkSize,alsoWholeRec);
       result.success("Android " + android.os.Build.VERSION.RELEASE + " -- START " + "prefix:" + prefix + " chunkSize:" + chunkSize);
     } else if (call.method.equals("STOP")) {
       stopRecorder();
@@ -86,13 +86,13 @@ public class RecServicePlugin implements FlutterPlugin, MethodCallHandler, Activ
     ContextCompat.startForegroundService(activity, serviceIntent);
   }
 
-  public void startRecorder(String path, String prefix, int chunkSize, boolean alsoWholeRec) {
+  public void startRecorder(String chunksPath, String prefix, int chunkSize, boolean alsoWholeRec) {
     Log.i(TAG, "Starting the foreground-thread");
 
     Intent serviceIntent = new Intent(context, RecService.class);
     serviceIntent.putExtra("inputExtra", "Foreground Service Example in Android");
-    if(path != null && !path.isEmpty()){
-      serviceIntent.putExtra("path", path);
+    if(chunksPath != null && !chunksPath.isEmpty()){
+      serviceIntent.putExtra("chunksPath", chunksPath);
     }
     if(prefix != null && !prefix.isEmpty()){
       serviceIntent.putExtra("prefix", prefix);

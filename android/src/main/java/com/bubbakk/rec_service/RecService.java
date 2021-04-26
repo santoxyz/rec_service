@@ -55,10 +55,10 @@ public class RecService extends Service {
             SetPaused(b.getBoolean("pause"));
             return START_NOT_STICKY;
         }
-        if (intent.hasExtra("path")){
+        if (intent.hasExtra("chunksPath")){
             Bundle b=new Bundle();
             b=intent.getExtras();
-            SetPath(b.getString("path"));
+            setChunksPath(b.getString("chunksPath"));
             //return START_NOT_STICKY;
         }
         if (intent.hasExtra("prefix")){
@@ -156,7 +156,7 @@ public class RecService extends Service {
 
     private String filename;
     private String filenameWhole;
-    private String filepath;
+    private String chunksFilePath;
 
     public void SetMuted(boolean m){
         muted = m;
@@ -166,8 +166,8 @@ public class RecService extends Service {
         paused = p;
     }
 
-    public void SetPath(String p){
-        filepath = p;
+    public void setChunksPath(String p){
+        chunksFilePath = p;
     }
 
     public void SetPrefix(String p){
@@ -193,18 +193,18 @@ public class RecService extends Service {
     private void startStreaming() {
         Log.i(TAG, "Starting the background thread (in this foreground service) to read the audio data");
 
-        if(filepath == null || filepath.isEmpty())
-            filepath = Environment.getExternalStorageDirectory().getPath();
+        if(chunksFilePath == null || chunksFilePath.isEmpty())
+            chunksFilePath = Environment.getExternalStorageDirectory().getPath();
 
         filename = prefix != null && !prefix.isEmpty()
             ? chunkSize > 0
-                ? filepath + "/" + prefix + "-" + String.format("%04d", chunkNum) + ".wav"          // four digits decimal max = 9999 = 10.000 chunks = ~6 days, one slice per minute
-                : filepath + "/" + prefix + ".wav"
-            : filepath + "/record.wav";
+                ? chunksFilePath + "/" + prefix + "-" + String.format("%04d", chunkNum) + ".wav"          // four digits decimal max = 9999 = 10.000 chunks = ~6 days, one slice per minute
+                : chunksFilePath + "/" + prefix + ".wav"
+            : chunksFilePath + "/record.wav";
         if(alsoWholeRec)
             filenameWhole = prefix != null && !prefix.isEmpty()
-                ? filepath + "/" + prefix + "-whole.wav"
-                : filepath + "/record-whole.wav";
+                ? chunksFilePath + "/" + prefix + "-whole.wav"
+                : chunksFilePath + "/record-whole.wav";
 
         try {
             outputStream = new FileOutputStream(filename);
@@ -261,9 +261,9 @@ public class RecService extends Service {
 
                             filename = prefix != null && !prefix.isEmpty()
                                     ? chunkSize > 0
-                                    ? filepath + "/" + prefix + "-" + chunkNum + ".wav"
-                                    : filepath + "/" + prefix + ".wav"
-                                    : filepath + "/record.wav";
+                                    ? chunksFilePath + "/" + prefix + "-" + chunkNum + ".wav"
+                                    : chunksFilePath + "/" + prefix + ".wav"
+                                    : chunksFilePath + "/record.wav";
 
                             try {
                                 outputStream = new FileOutputStream(filename);
