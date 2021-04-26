@@ -198,7 +198,7 @@ public class RecService extends Service {
 
         filename = prefix != null && !prefix.isEmpty()
             ? chunkSize > 0
-                ? filepath + "/" + prefix + "-" + chunkNum + ".wav"
+                ? filepath + "/" + prefix + "-" + String.format("%04d", chunkNum) + ".wav"          // four digits decimal max = 9999 = 10.000 chunks = ~6 days, one slice per minute
                 : filepath + "/" + prefix + ".wav"
             : filepath + "/record.wav";
         if(alsoWholeRec)
